@@ -10,6 +10,7 @@ export function Reports() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [periodLabel, setPeriodLabel] = useState("Toutes les données");
+  const [showAllMeds, setShowAllMeds] = useState(false);
 
   const loadData = async () => {
     setLoading(true);
@@ -384,7 +385,7 @@ export function Reports() {
             </thead>
             <tbody className="divide-y divide-gray-200">
               {topMedicaments.length > 0 ? (
-                topMedicaments.map((item) => (
+                (showAllMeds ? topMedicaments : topMedicaments.slice(0, 10)).map((item) => (
                   <tr key={item.rank} className="hover:bg-gray-50">
                     <td className="px-6 py-4">
                       <span className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-teal-100 text-teal-700 font-bold">
@@ -420,6 +421,30 @@ export function Reports() {
               )}
             </tbody>
           </table>
+          {topMedicaments.length > 10 && (
+            <div className="px-6 py-4 border-t border-gray-200 flex justify-center bg-gray-50">
+              <button
+                onClick={() => setShowAllMeds(!showAllMeds)}
+                className="inline-flex items-center gap-2 text-teal-600 hover:text-teal-700 font-semibold transition-colors text-sm"
+              >
+                {showAllMeds ? (
+                  <>
+                    <span>Voir moins</span>
+                    <svg className="h-4 w-4 transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                    </svg>
+                  </>
+                ) : (
+                  <>
+                    <span>Voir plus ({topMedicaments.length - 10})</span>
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                    </svg>
+                  </>
+                )}
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

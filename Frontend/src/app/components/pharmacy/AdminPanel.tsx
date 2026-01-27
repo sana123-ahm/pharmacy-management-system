@@ -46,6 +46,11 @@ export const AdminPanel: React.FC = () => {
   const [medicaments, setMedicaments] = useState<Medicament[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
+  const [showAllPatients, setShowAllPatients] = useState(false);
+  const [showAllMedecins, setShowAllMedecins] = useState(false);
+  const [showAllFournisseurs, setShowAllFournisseurs] = useState(false);
+  const [showAllMedicaments, setShowAllMedicaments] = useState(false);
+  const [showAllUsers, setShowAllUsers] = useState(false);
 
   // Form states
   const [newPatient, setNewPatient] = useState({ nom: '', prenom: '' });
@@ -304,7 +309,7 @@ export const AdminPanel: React.FC = () => {
     }
   };
 
-  const DataTable = ({ title, items, columns }: any) => (
+  const DataTable = ({ title, items, columns, showAll, onToggleShowAll }: any) => (
     <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
       <div className="px-8 py-6 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100">
         <h3 className="font-bold text-gray-900 text-lg">{title}</h3>
@@ -316,24 +321,50 @@ export const AdminPanel: React.FC = () => {
           <p className="text-gray-400 text-sm">Les données apparaîtront ici une fois ajoutées</p>
         </div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <tbody className="divide-y divide-gray-200">
-              {items.map((item: any, index: number) => (
-                <tr key={item.id} className="hover:bg-gray-50/50 transition-colors group">
-                  <td className="px-8 py-4 text-left">
-                    <span className="text-gray-500 text-sm font-medium w-6 inline-block">#{index + 1}</span>
-                  </td>
-                  {columns.map((col: any) => (
-                    <td key={col.key} className="px-8 py-4 text-sm text-gray-700">
-                      {col.render ? col.render(item) : item[col.key]}
+        <>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <tbody className="divide-y divide-gray-200">
+                {(showAll ? items : items.slice(0, 15)).map((item: any, index: number) => (
+                  <tr key={item.id} className="hover:bg-gray-50/50 transition-colors group">
+                    <td className="px-8 py-4 text-left">
+                      <span className="text-gray-500 text-sm font-medium w-6 inline-block">#{index + 1}</span>
                     </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                    {columns.map((col: any) => (
+                      <td key={col.key} className="px-8 py-4 text-sm text-gray-700">
+                        {col.render ? col.render(item) : item[col.key]}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {items.length > 15 && (
+            <div className="px-8 py-4 border-t border-gray-200 flex justify-center bg-gray-50">
+              <button
+                onClick={onToggleShowAll}
+                className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-semibold transition-colors text-sm"
+              >
+                {showAll ? (
+                  <>
+                    <span>Voir moins</span>
+                    <svg className="h-4 w-4 transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                    </svg>
+                  </>
+                ) : (
+                  <>
+                    <span>Voir plus ({items.length - 15})</span>
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                    </svg>
+                  </>
+                )}
+              </button>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
@@ -417,6 +448,8 @@ export const AdminPanel: React.FC = () => {
           <DataTable
             title={`Patients (${patients.length})`}
             items={patients}
+            showAll={showAllPatients}
+            onToggleShowAll={() => setShowAllPatients(!showAllPatients)}
             columns={[
               { key: 'prenom', render: (p: Patient) => <span className="font-medium">{p.prenom}</span> },
               { key: 'nom', render: (p: Patient) => p.nom },
@@ -459,6 +492,8 @@ export const AdminPanel: React.FC = () => {
           <DataTable
             title={`Médecins (${medecins.length})`}
             items={medecins}
+            showAll={showAllMedecins}
+            onToggleShowAll={() => setShowAllMedecins(!showAllMedecins)}
             columns={[
               { key: 'prenom', render: (m: Medecin) => <span className="font-medium">{m.prenom}</span> },
               { key: 'nom', render: (m: Medecin) => m.nom },
@@ -493,6 +528,8 @@ export const AdminPanel: React.FC = () => {
           <DataTable
             title={`Fournisseurs (${fournisseurs.length})`}
             items={fournisseurs}
+            showAll={showAllFournisseurs}
+            onToggleShowAll={() => setShowAllFournisseurs(!showAllFournisseurs)}
             columns={[
               { key: 'nom', render: (f: Fournisseur) => <span className="font-medium">{f.nom}</span> },
             ]}
@@ -599,7 +636,7 @@ export const AdminPanel: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {users.map((user) => (
+                    {(showAllUsers ? users : users.slice(0, 15)).map((user) => (
                       <tr key={user.id} className="border-b border-gray-100 hover:bg-gray-50 transition">
                         <td className="py-3 px-4">
                           <input
@@ -631,6 +668,30 @@ export const AdminPanel: React.FC = () => {
                     ))}
                   </tbody>
                 </table>
+                {users.length > 15 && (
+                  <div className="px-4 py-4 border-t border-gray-200 flex justify-center bg-gray-50">
+                    <button
+                      onClick={() => setShowAllUsers(!showAllUsers)}
+                      className="inline-flex items-center gap-2 text-red-600 hover:text-red-700 font-semibold transition-colors text-sm"
+                    >
+                      {showAllUsers ? (
+                        <>
+                          <span>Voir moins</span>
+                          <svg className="h-4 w-4 transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                          </svg>
+                        </>
+                      ) : (
+                        <>
+                          <span>Voir plus ({users.length - 15})</span>
+                          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                          </svg>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>

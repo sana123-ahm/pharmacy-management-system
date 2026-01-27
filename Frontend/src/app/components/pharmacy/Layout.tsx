@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Menu, X, Pill, Package, ShoppingCart, ChartBar, LogOut, User, Settings } from "lucide-react";
+import { Menu, X, Pill, Package, ShoppingCart, ChartBar, LogOut, User, Settings, Warehouse } from "lucide-react";
 import { Button } from "../ui/button";
 
 interface LayoutProps {
@@ -17,6 +17,7 @@ export function Layout({ children, currentPage, onNavigate, username, onLogout }
     { id: "dashboard", label: "Tableau de bord", icon: <ChartBar className="h-5 w-5" /> },
     { id: "medications", label: "Médicaments", icon: <Pill className="h-5 w-5" /> },
     { id: "sales", label: "Ventes", icon: <ShoppingCart className="h-5 w-5" /> },
+    { id: "stocks", label: "Stocks", icon: <Warehouse className="h-5 w-5" /> },
     { id: "reports", label: "Rapports", icon: <Package className="h-5 w-5" /> },
     { id: "admin", label: "Gestion", icon: <Settings className="h-5 w-5" /> },
   ];

@@ -436,6 +436,22 @@ class VenteService {
     const ventes = await this.getVentesToday();
     return ventes.reduce((sum, vente) => sum + vente.montantTotal, 0);
   }
+
+  /**
+   * Récupérer les ventes contenant un médicament spécifique
+   */
+  async getVentesByMedicament(medicamentId: number): Promise<Vente[]> {
+    try {
+      const ventes = await this.getAllVentes();
+      // Filtrer les ventes qui contiennent ce médicament
+      return ventes.filter((vente) =>
+        vente.lignes?.some((ligne) => ligne.medicament.id === medicamentId)
+      );
+    } catch (error) {
+      console.error("Error fetching ventes by medicament:", error);
+      return [];
+    }
+  }
 }
 
 export default new VenteService();

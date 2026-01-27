@@ -39,6 +39,7 @@ export function Sales({ userId }: SalesProps) {
   const [loadingVentes, setLoadingVentes] = useState(true);
   const [errorVentes, setErrorVentes] = useState("");
   const [filterPeriod, setFilterPeriod] = useState("all");
+  const [showAllVentes, setShowAllVentes] = useState(false);
 
   // Gestion des médicaments et recherche
   const [medicaments, setMedicaments] = useState<Medicament[]>([]);
@@ -370,7 +371,7 @@ export function Sales({ userId }: SalesProps) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {ventes.map((vente) => (
+                {(showAllVentes ? ventes : ventes.slice(0, 15)).map((vente) => (
                   <tr key={vente.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4">
                       <p className="font-semibold text-gray-800">
@@ -413,6 +414,31 @@ export function Sales({ userId }: SalesProps) {
                 ))}
               </tbody>
             </table>
+
+            {ventes.length > 15 && (
+              <div className="px-6 py-4 border-t border-gray-200 flex justify-center">
+                <button
+                  onClick={() => setShowAllVentes(!showAllVentes)}
+                  className="inline-flex items-center gap-2 text-teal-600 hover:text-teal-700 font-semibold transition-colors"
+                >
+                  {showAllVentes ? (
+                    <>
+                      <span>Voir moins</span>
+                      <svg className="h-5 w-5 transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                      </svg>
+                    </>
+                  ) : (
+                    <>
+                      <span>Voir plus ({ventes.length - 15} de plus)</span>
+                      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                      </svg>
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>

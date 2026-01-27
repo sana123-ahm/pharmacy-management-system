@@ -5,6 +5,7 @@ import { Dashboard } from "./components/pharmacy/Dashboard";
 import { Medications } from "./components/pharmacy/Medications";
 import { Sales } from "./components/pharmacy/Sales";
 import { Reports } from "./components/pharmacy/Reports";
+import { StockManagement } from "./components/pharmacy/StockManagement";
 import { AdminPanel } from "./components/pharmacy/AdminPanel";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import authService from "./services/authService";
@@ -91,6 +92,8 @@ export default function App() {
             <Sales userId={userId} />
           </ErrorBoundary>
         );
+      case "stocks":
+        return <StockManagement />;
       case "reports":
         return <Reports />;
       case "admin":

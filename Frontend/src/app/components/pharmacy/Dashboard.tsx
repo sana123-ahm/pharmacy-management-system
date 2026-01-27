@@ -40,6 +40,8 @@ export function Dashboard({ userId }: DashboardProps) {
   const [lowStockMedicaments, setLowStockMedicaments] = useState<Medicament[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [showAllVentes, setShowAllVentes] = useState(false);
+  const [showAllAlerts, setShowAllAlerts] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -65,7 +67,14 @@ export function Dashboard({ userId }: DashboardProps) {
       }
     };
 
+    // Charger les données immédiatement
     loadData();
+
+    // Rafraîchir les données toutes les 30 secondes
+    const interval = setInterval(loadData, 30000);
+
+    // Nettoyer l'intervalle quand le composant est démonté
+    return () => clearInterval(interval);
   }, []);
 
   const stats = [
@@ -142,7 +151,7 @@ export function Dashboard({ userId }: DashboardProps) {
             <p className="text-gray-500 text-center py-4">Aucune vente aujourd'hui</p>
           ) : (
             <div className="space-y-3">
-              {ventes.slice(0, 5).map((vente) => (
+              {(showAllVentes ? ventes : ventes.slice(0, 5)).map((vente) => (
                 <div
                   key={vente.id}
                   className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
@@ -170,6 +179,30 @@ export function Dashboard({ userId }: DashboardProps) {
                   </div>
                 </div>
               ))}
+              {ventes.length > 5 && (
+                <div className="mt-4 pt-4 border-t flex justify-center">
+                  <button
+                    onClick={() => setShowAllVentes(!showAllVentes)}
+                    className="inline-flex items-center gap-2 text-teal-600 hover:text-teal-700 font-semibold transition-colors text-sm"
+                  >
+                    {showAllVentes ? (
+                      <>
+                        <span>Voir moins</span>
+                        <svg className="h-4 w-4 transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                        </svg>
+                      </>
+                    ) : (
+                      <>
+                        <span>Voir plus ({ventes.length - 5})</span>
+                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                        </svg>
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -182,27 +215,53 @@ export function Dashboard({ userId }: DashboardProps) {
           {lowStockMedicaments.length === 0 ? (
             <p className="text-gray-500 text-center py-4">Tous les stocks sont corrects ✓</p>
           ) : (
-            <div className="space-y-3">
-              {lowStockMedicaments.slice(0, 4).map((item) => (
-                <div
-                  key={item.id}
-                  className="flex items-center justify-between p-3 bg-orange-50 border border-orange-200 rounded-lg"
-                >
-                  <div className="flex-1">
-                    <p className="font-semibold text-gray-800">{item.nom}</p>
-                    <p className="text-sm text-gray-600">
-                      {item.fournisseur?.nom || "Fournisseur inconnu"}
-                    </p>
+            <>
+              <div className="space-y-3">
+                {(showAllAlerts ? lowStockMedicaments : lowStockMedicaments.slice(0, 4)).map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center justify-between p-3 bg-orange-50 border border-orange-200 rounded-lg"
+                  >
+                    <div className="flex-1">
+                      <p className="font-semibold text-gray-800">{item.nom}</p>
+                      <p className="text-sm text-gray-600">
+                        {item.fournisseur?.nom || "Fournisseur inconnu"}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-semibold text-orange-600">
+                        {item.stock} unités
+                      </p>
+                      <p className="text-xs text-gray-500">Min: 50</p>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-sm font-semibold text-orange-600">
-                      {item.stock} unités
-                    </p>
-                    <p className="text-xs text-gray-500">Min: 50</p>
-                  </div>
+                ))}
+              </div>
+              {lowStockMedicaments.length > 4 && (
+                <div className="mt-4 pt-4 border-t flex justify-center">
+                  <button
+                    onClick={() => setShowAllAlerts(!showAllAlerts)}
+                    className="inline-flex items-center gap-2 text-orange-600 hover:text-orange-700 font-semibold transition-colors text-sm"
+                  >
+                    {showAllAlerts ? (
+                      <>
+                        <span>Voir moins</span>
+                        <svg className="h-4 w-4 transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                        </svg>
+                      </>
+                    ) : (
+                      <>
+                        <span>Voir plus ({lowStockMedicaments.length - 4})</span>
+                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                        </svg>
+                      </>
+                    )}
+                  </button>
                 </div>
-              ))}
-            </div>
+              )}
+            </>
           )}
         </div>
       </div>
