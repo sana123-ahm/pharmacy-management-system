@@ -1,7 +1,7 @@
 package com.pharmacie.model;
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -28,7 +28,7 @@ public class Medicament {
     private Fournisseur fournisseur;
 
     @OneToMany(mappedBy = "medicament")
-    @JsonBackReference
+    @JsonIgnore
     private List<LigneVente> lignes;
 
     // getters & setters

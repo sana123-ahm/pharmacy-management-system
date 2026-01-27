@@ -6,26 +6,21 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.cors.CorsConfigurationSource;
 
 @Configuration
 public class SecurityConfig {
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http, CorsConfigurationSource corsConfigurationSource) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
         http
-            .cors(cors -> cors.configurationSource(corsConfigurationSource))
             .csrf().disable()   // Désactive CSRF (API REST)
+            .cors().and()       // Active CORS
             .authorizeHttpRequests(authorize -> authorize
-                .requestMatchers(
-                    "/api/users/register",
-                    "/swagger-ui/**",
-                    "/v3/api-docs/**"
-                ).permitAll()      // 🟢 Public
-                .anyRequest().authenticated()  // 🔒 Les autres nécessitent auth
-            )
-            .httpBasic();  // Authentification basique (temporaire)
+                .requestMatchers("/api/auth/**").permitAll()  // Auth endpoints sans authentification
+                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()  // Documentation
+                .anyRequest().permitAll()  // Temporairement permis pour faciliter les tests
+            );
 
         return http.build();
     }

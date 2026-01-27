@@ -21,7 +21,7 @@ export function Hero({ heroImage }: HeroProps) {
             SUMMER WAVES
           </h1>
           <p className="text-xl md:text-2xl text-gray-200">
-            Music Festival 2026
+            PharmaGest
           </p>
           
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6 pt-4">

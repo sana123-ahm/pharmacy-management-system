@@ -84,7 +84,7 @@ export function Dashboard({ userId }: DashboardProps) {
       trendUp: true,
     },
     {
-      title: "Chiffre d'affaires (€)",
+      title: "Chiffre d'affaires (DH)",
       value: ventes.reduce((sum, v) => sum + v.montantTotal, 0).toFixed(2),
       icon: <DollarSign className="h-6 w-6 text-green-600" />,
       trend: ventes.length > 0 ? "+8%" : "0",

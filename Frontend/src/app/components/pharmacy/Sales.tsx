@@ -5,6 +5,7 @@ import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "../ui/dialog";
 import { SearchableSelect } from "../ui/SearchableSelect";
+import { Snackbar, Alert } from "@mui/material";
 import medicamentService, { type Medicament } from "../../services/medicamentService";
 import venteService, { type Vente } from "../../services/venteService";
 import factureService from "../../services/factureService";
@@ -28,6 +29,11 @@ interface SalesProps {
 }
 
 export function Sales({ userId }: SalesProps) {
+  // Gestion des notifications
+  const [successDialogOpen, setSuccessDialogOpen] = useState(false);
+  const [errorSnackbarOpen, setErrorSnackbarOpen] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
   // Gestion ventes historique
   const [ventes, setVentes] = useState<Vente[]>([]);
   const [loadingVentes, setLoadingVentes] = useState(true);
@@ -247,15 +253,33 @@ export function Sales({ userId }: SalesProps) {
 
       // Recharger les ventes
       await loadVentes();
+      
+      // Recharger les médicaments pour mettre à jour les stocks
+      await loadMedicaments();
 
-      alert("Vente enregistrée avec succès !");
+      // Afficher dialog de succès
+      setSuccessDialogOpen(true);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Erreur inconnue lors de l'enregistrement de la vente";
       console.error("Erreur complète:", err);
-      alert(errorMessage);
+      
+      // Afficher notification d'erreur
+      setErrorMessage(errorMessage);
+      setErrorSnackbarOpen(true);
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleCloseErrorSnackbar = (event?: React.SyntheticEvent | Event, reason?: string) => {
+    if (reason === "clickaway") {
+      return;
+    }
+    setErrorSnackbarOpen(false);
+  };
+
+  const handleCloseSuccessDialog = () => {
+    setSuccessDialogOpen(false);
   };
 
   const totalRevenue = ventes.reduce((sum, v) => sum + v.montantTotal, 0);
@@ -434,7 +458,7 @@ export function Sales({ userId }: SalesProps) {
                       <div className="flex-1">
                         <p className="font-semibold text-gray-800 text-sm">{med.nom}</p>
                         <p className="text-xs text-gray-600">
-                          {med.prix.toFixed(2)} DH • Stock: {med.stock}
+                            {med.prix.toFixed(2)} DH • Stock: {med.stock}
                         </p>
                       </div>
                       <Button
@@ -565,6 +589,51 @@ export function Sales({ userId }: SalesProps) {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Dialog pour le succès de la vente */}
+      <Dialog open={successDialogOpen} onOpenChange={setSuccessDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-center text-xl font-bold text-green-600">
+              ✓ Vente enregistrée avec succès!
+            </DialogTitle>
+          </DialogHeader>
+          <div className="text-center py-6">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 mb-4">
+              <svg className="w-8 h-8 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <p className="text-gray-700 font-medium mb-6">
+              La vente a été enregistrée et le panier a été vidé.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button
+              onClick={handleCloseSuccessDialog}
+              className="w-full bg-teal-500 hover:bg-teal-600 text-white font-semibold h-11"
+            >
+              OK - Continuer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Snackbar pour les erreurs */}
+      <Snackbar
+        open={errorSnackbarOpen}
+        autoHideDuration={4000}
+        onClose={handleCloseErrorSnackbar}
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+      >
+        <Alert 
+          onClose={handleCloseErrorSnackbar} 
+          severity="error"
+          sx={{ width: "100%", fontWeight: 500 }}
+        >
+          {errorMessage}
+        </Alert>
+      </Snackbar>
     </div>
   );
 }

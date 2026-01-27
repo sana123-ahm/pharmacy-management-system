@@ -346,7 +346,7 @@ export function Reports() {
                 yAxisId="right"
                 type="monotone" 
                 dataKey="montant" 
-                name="Montant (€)"
+                name="Montant (DH)"
                 stroke="#14b8a6" 
                 strokeWidth={3}
                 dot={{ fill: '#14b8a6', r: 5 }}
@@ -398,7 +398,7 @@ export function Reports() {
                       {item.units}
                     </td>
                     <td className="px-6 py-4 font-semibold text-gray-800">
-                      {item.revenue} €
+                      {item.revenue} DH
                     </td>
                     <td className="px-6 py-4">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${

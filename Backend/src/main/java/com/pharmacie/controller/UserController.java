@@ -4,13 +4,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.pharmacie.dto.Register;
+import com.pharmacie.model.Utilisateur;
 import com.pharmacie.service.RegisterService;
+import java.util.List;
 
 @RestController                    
 @RequestMapping("/api/users")       
@@ -71,6 +70,55 @@ public class UserController {
             return ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
                     .body("Erreur lors de la déconnexion: " + e.getMessage());
+        }
+    }
+
+    // Lister tous les utilisateurs
+    @GetMapping("/all")
+    public ResponseEntity<List<Utilisateur>> getAllUsers() {
+        try {
+            List<Utilisateur> users = registerService.getAllUsers();
+            return ResponseEntity.ok(users);
+        } catch (Exception e) {
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .build();
+        }
+    }
+
+    // Supprimer un utilisateur par ID
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deleteUser(@PathVariable Long id) {
+        try {
+            boolean deleted = registerService.deleteUser(id);
+            if (deleted) {
+                return ResponseEntity
+                        .status(HttpStatus.OK)
+                        .body("Utilisateur supprimé avec succès");
+            } else {
+                return ResponseEntity
+                        .status(HttpStatus.NOT_FOUND)
+                        .body("Utilisateur non trouvé");
+            }
+        } catch (Exception e) {
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Erreur lors de la suppression: " + e.getMessage());
+        }
+    }
+
+    // Supprimer plusieurs utilisateurs
+    @DeleteMapping("/bulk-delete")
+    public ResponseEntity<String> deleteMultipleUsers(@RequestBody List<Long> ids) {
+        try {
+            int deletedCount = registerService.deleteMultipleUsers(ids);
+            return ResponseEntity
+                    .status(HttpStatus.OK)
+                    .body(deletedCount + " utilisateur(s) supprimé(s) avec succès");
+        } catch (Exception e) {
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Erreur lors de la suppression: " + e.getMessage());
         }
     }
 }

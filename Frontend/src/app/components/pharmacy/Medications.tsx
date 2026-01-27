@@ -6,11 +6,17 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Label } from "../ui/label";
 import medicamentService, { type Medicament, type MedicamentRequestDTO } from "../../services/medicamentService";
 
+interface Fournisseur {
+  id: number;
+  nom: string;
+}
+
 export function Medications() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingMedication, setEditingMedication] = useState<Medicament | null>(null);
   const [medications, setMedications] = useState<Medicament[]>([]);
+  const [fournisseurs, setFournisseurs] = useState<Fournisseur[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
@@ -39,7 +45,20 @@ export function Medications() {
       }
     };
 
+    const loadFournisseurs = async () => {
+      try {
+        const response = await fetch("http://localhost:8081/api/fournisseurs/all");
+        if (response.ok) {
+          const data = await response.json();
+          setFournisseurs(data);
+        }
+      } catch (err) {
+        console.error("Erreur lors du chargement des fournisseurs:", err);
+      }
+    };
+
     loadMedications();
+    loadFournisseurs();
   }, []);
 
   const filteredMedications = medications.filter((med) =>
@@ -288,7 +307,7 @@ export function Medications() {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="prix">Prix (€) *</Label>
+                <Label htmlFor="prix">Prix (DH) *</Label>
                 <Input
                   id="prix"
                   type="number"
@@ -312,6 +331,27 @@ export function Medications() {
                   disabled={isSaving}
                 />
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="fournisseur">Fournisseur</Label>
+              <select
+                id="fournisseur"
+                value={formData.fournisseurId || ''}
+                onChange={(e) => setFormData({ 
+                  ...formData, 
+                  fournisseurId: e.target.value ? parseInt(e.target.value) : undefined 
+                })}
+                disabled={isSaving}
+                className="w-full h-10 px-3 border border-gray-300 rounded-md focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500"
+              >
+                <option value="">-- Sélectionner un fournisseur --</option>
+                {fournisseurs.map((f) => (
+                  <option key={f.id} value={f.id}>
+                    {f.nom}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div className="space-y-2">

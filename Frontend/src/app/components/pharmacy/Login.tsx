@@ -15,7 +15,6 @@ export function Login({ onLogin }: LoginProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [isRegistering, setIsRegistering] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,36 +41,6 @@ export function Login({ onLogin }: LoginProps) {
     }
   };
 
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    setIsLoading(true);
-
-    try {
-      if (!username.trim() || !password) {
-        setError("Veuillez remplir tous les champs");
-        return;
-      }
-
-      if (password.length < 6) {
-        setError("Le mot de passe doit contenir au moins 6 caractères");
-        return;
-      }
-
-      const response = await authService.register(username, password);
-      
-      // Stocker le token et les infos utilisateur
-      authService.setToken(response.token);
-      authService.setUser(response.userId, response.login);
-      
-      onLogin(response.login, response.userId);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Erreur lors de l'inscription");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-teal-50 via-white to-blue-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
@@ -90,33 +59,10 @@ export function Login({ onLogin }: LoginProps) {
           </div>
 
           {/* Onglets */}
-          <div className="flex gap-2 mb-6">
-            <Button
-              type="button"
-              onClick={() => setIsRegistering(false)}
-              className={`flex-1 h-10 ${
-                !isRegistering
-                  ? "bg-teal-500 text-white"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-              }`}
-            >
-              Connexion
-            </Button>
-            <Button
-              type="button"
-              onClick={() => setIsRegistering(true)}
-              className={`flex-1 h-10 ${
-                isRegistering
-                  ? "bg-teal-500 text-white"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-              }`}
-            >
-              Inscription
-            </Button>
-          </div>
+          <div className="flex gap-2 mb-6"></div>
 
           {/* Formulaire */}
-          <form onSubmit={isRegistering ? handleRegister : handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="username">Nom d'utilisateur</Label>
               <div className="relative">
@@ -172,12 +118,10 @@ export function Login({ onLogin }: LoginProps) {
             <Button
               type="submit"
               disabled={isLoading}
-              className="w-full h-12 bg-teal-500 hover:bg-teal-600 text-white disabled:opacity-50"
+              className="w-full h-12 bg-teal-500 hover:bg-teal-600 text-white disabled:opacity-50 font-semibold"
             >
               {isLoading ? (
                 <Loader className="h-5 w-5 animate-spin" />
-              ) : isRegistering ? (
-                "S'inscrire"
               ) : (
                 "Se connecter"
               )}
@@ -185,10 +129,9 @@ export function Login({ onLogin }: LoginProps) {
           </form>
 
           {/* Info texte */}
-          <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700">
-            <p className="font-semibold mb-2">ℹ️ Informations :</p>
-            <p>Utilisez vos identifiants pour vous connecter à la plateforme.</p>
-            <p className="mt-2">Si vous n'avez pas de compte, cliquez sur "Inscription".</p>
+          <div className="mt-6 p-4 bg-teal-50 border border-teal-200 rounded-lg text-sm text-teal-700">
+            <p className="font-semibold mb-1">🔐 Bienvenue</p>
+            <p>Connectez-vous à votre compte pour accéder à la plateforme PharmaGest.</p>
           </div>
         </div>
       </div>

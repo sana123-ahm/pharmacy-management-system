@@ -22,8 +22,8 @@ import com.pharmacie.repository.MedicamentRepository;
 import com.pharmacie.repository.PatientRepository;
 import com.pharmacie.repository.UtilisateurRepository;
 import com.pharmacie.repository.VenteRepository;
-import com.pharmacie.service.VenteService;
 import com.pharmacie.service.FactureService;
+import com.pharmacie.service.VenteService;
 
 @Service
 @Transactional
@@ -98,10 +98,20 @@ public class VenteServiceImpl implements VenteService {
                 Medicament medicament = medicamentRepository.findById(ligneDTO.getMedicamentId())
                         .orElseThrow(() -> new RuntimeException("Médicament avec l'ID " + ligneDTO.getMedicamentId() + " non trouvé"));
 
+                // Vérifier si le stock est suffisant
+                if (medicament.getStock() < ligneDTO.getQuantite()) {
+                    throw new RuntimeException("Stock insuffisant pour " + medicament.getNom() + 
+                            ". Disponible: " + medicament.getStock() + ", Demandé: " + ligneDTO.getQuantite());
+                }
+
                 ligne.setMedicament(medicament);
                 ligne.setQuantite(ligneDTO.getQuantite());
                 ligne.setPrixUnitaire(ligneDTO.getPrixUnitaire());
                 ligne.setVente(vente);
+
+                // Décrémenter le stock du médicament
+                medicament.setStock(medicament.getStock() - ligneDTO.getQuantite());
+                medicamentRepository.save(medicament);
 
                 lignes.add(ligne);
                 montantTotal += ligne.getTotal();
@@ -121,17 +131,18 @@ public class VenteServiceImpl implements VenteService {
         System.out.println("Vente lignes: " + venteSauvegardee.getLignes().size());
         
         // Générer automatiquement la facture après la vente
+        // La facture DOIT être générée après la vente pour utiliser son ID
         System.out.println("=== AVANT GÉNÉRATION FACTURE ===");
         try {
             System.out.println("Appel de generateAndSaveFacture avec venteId: " + venteSauvegardee.getId());
             factureService.generateAndSaveFacture(venteSauvegardee.getId());
-            System.out.println("=== FACTURE GÉNÉRÉE AVEC SUCCÈS ===");
+            System.out.println("=== FACTURE GÉNÉRÉE ET ENREGISTRÉE AVEC SUCCÈS ===");
         } catch (Exception e) {
-            System.err.println("=== ERREUR GÉNÉRATION FACTURE ===");
+            System.err.println("=== ERREUR GÉNÉRALE LORS DE LA GÉNÉRATION FACTURE ===");
             System.err.println("Message: " + e.getMessage());
-            System.err.println("Cause: " + e.getCause());
+            System.err.println("Classe de l'exception: " + e.getClass().getName());
             e.printStackTrace();
-            // Ne pas lancer d'exception, juste logger l'erreur
+            // Continuer sans lever l'exception
         }
         
         return convertToDTO(venteSauvegardee);

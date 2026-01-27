@@ -45,6 +45,7 @@ export const AdminPanel: React.FC = () => {
   const [fournisseurs, setFournisseurs] = useState<Fournisseur[]>([]);
   const [medicaments, setMedicaments] = useState<Medicament[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
 
   // Form states
   const [newPatient, setNewPatient] = useState({ nom: '', prenom: '' });
@@ -77,7 +78,7 @@ export const AdminPanel: React.FC = () => {
         fetch(`${baseURL}/medicaments/all`),
         fetch(`${baseURL}/fournisseurs/all`),
         fetch(`${baseURL}/medecins/all`),
-        fetch(`${baseURL}/utilisateurs/all`),
+        fetch(`${baseURL}/users/all`),
       ]);
 
       if (pRes.ok) setPatients(await pRes.json());
@@ -243,6 +244,61 @@ export const AdminPanel: React.FC = () => {
       }
     } catch (error) {
       showMessage('Erreur lors de la création de l\'utilisateur', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Supprimer un utilisateur
+  const deleteUser = async (id: number) => {
+    if (!window.confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?')) {
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      const response = await fetch(`${baseURL}/users/${id}`, {
+        method: 'DELETE',
+      });
+      if (response.ok) {
+        showMessage('Utilisateur supprimé avec succès', 'success');
+        loadData();
+      } else {
+        showMessage('Erreur lors de la suppression de l\'utilisateur', 'error');
+      }
+    } catch (error) {
+      showMessage('Erreur lors de la suppression de l\'utilisateur', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Supprimer plusieurs utilisateurs
+  const deleteMultipleUsers = async (ids: number[]) => {
+    if (ids.length === 0) {
+      showMessage('Sélectionnez au moins un utilisateur', 'error');
+      return;
+    }
+
+    if (!window.confirm(`Êtes-vous sûr de vouloir supprimer ${ids.length} utilisateur(s) ?`)) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await fetch(`${baseURL}/users/bulk-delete`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(ids),
+      });
+      if (response.ok) {
+        showMessage(`${ids.length} utilisateur(s) supprimé(s) avec succès`, 'success');
+        loadData();
+      } else {
+        showMessage('Erreur lors de la suppression des utilisateurs', 'error');
+      }
+    } catch (error) {
+      showMessage('Erreur lors de la suppression des utilisateurs', 'error');
     } finally {
       setLoading(false);
     }
@@ -443,8 +499,6 @@ export const AdminPanel: React.FC = () => {
           />
         </TabsContent>
 
-
-
         {/* UTILISATEURS */}
         <TabsContent value="utilisateurs" className="space-y-6 mt-6">
           <div className="bg-gradient-to-br from-red-50 to-red-100/50 rounded-xl border border-red-200 p-8 shadow-sm">
@@ -494,13 +548,92 @@ export const AdminPanel: React.FC = () => {
             </Button>
           </div>
 
-          <DataTable
-            title={`Utilisateurs (${users.length})`}
-            items={users}
-            columns={[
-              { key: 'login', render: (u: User) => <span className="font-medium text-gray-900">{u.login}</span> },
-            ]}
-          />
+          {/* Liste des utilisateurs */}
+          <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <Users className="h-6 w-6 text-gray-600" />
+                <div>
+                  <h3 className="font-bold text-gray-900 text-lg">Utilisateurs ({users.length})</h3>
+                  <p className="text-gray-600 text-sm">Gérez les comptes utilisateurs</p>
+                </div>
+              </div>
+              {selectedUserIds.length > 0 && (
+                <Button 
+                  onClick={() => deleteMultipleUsers(selectedUserIds)} 
+                  disabled={loading}
+                  className="bg-red-500 hover:bg-red-600 text-white h-10"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Supprimer ({selectedUserIds.length})
+                </Button>
+              )}
+            </div>
+
+            {users.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-gray-500">Aucun utilisateur trouvé</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-gray-200">
+                      <th className="text-left py-3 px-4">
+                        <input
+                          type="checkbox"
+                          checked={selectedUserIds.length === users.length}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedUserIds(users.map(u => u.id));
+                            } else {
+                              setSelectedUserIds([]);
+                            }
+                          }}
+                          className="w-4 h-4 rounded border-gray-300"
+                        />
+                      </th>
+                      <th className="text-left py-3 px-4 font-semibold text-gray-700">ID</th>
+                      <th className="text-left py-3 px-4 font-semibold text-gray-700">Nom d'utilisateur</th>
+                      <th className="text-right py-3 px-4 font-semibold text-gray-700">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {users.map((user) => (
+                      <tr key={user.id} className="border-b border-gray-100 hover:bg-gray-50 transition">
+                        <td className="py-3 px-4">
+                          <input
+                            type="checkbox"
+                            checked={selectedUserIds.includes(user.id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedUserIds([...selectedUserIds, user.id]);
+                              } else {
+                                setSelectedUserIds(selectedUserIds.filter(id => id !== user.id));
+                              }
+                            }}
+                            className="w-4 h-4 rounded border-gray-300"
+                          />
+                        </td>
+                        <td className="py-3 px-4 text-gray-600 font-mono">{user.id}</td>
+                        <td className="py-3 px-4 text-gray-900 font-medium">{user.login}</td>
+                        <td className="py-3 px-4 text-right">
+                          <Button
+                            onClick={() => deleteUser(user.id)}
+                            disabled={loading}
+                            className="bg-red-500 hover:bg-red-600 text-white h-9 px-3 inline-flex gap-2"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            Supprimer
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
         </TabsContent>
       </Tabs>
     </div>

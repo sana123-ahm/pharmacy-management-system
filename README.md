@@ -1,1 +1,0 @@
-"# Pharmacy Management System" 

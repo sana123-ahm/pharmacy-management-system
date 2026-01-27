@@ -1,5 +1,15 @@
 package com.pharmacie.service;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Optional;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.itextpdf.kernel.colors.ColorConstants;
 import com.itextpdf.kernel.font.PdfFont;
 import com.itextpdf.kernel.font.PdfFontFactory;
 import com.itextpdf.kernel.pdf.PdfDocument;
@@ -10,23 +20,16 @@ import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.properties.TextAlignment;
 import com.itextpdf.layout.properties.VerticalAlignment;
-import com.itextpdf.kernel.colors.ColorConstants;
-import com.pharmacie.dto.VenteDTO;
 import com.pharmacie.dto.LigneVenteDTO;
+import com.pharmacie.dto.VenteDTO;
 import com.pharmacie.model.Facture;
-import com.pharmacie.model.Vente;
 import com.pharmacie.model.LigneVente;
+import com.pharmacie.model.Vente;
 import com.pharmacie.repository.FactureRepository;
 import com.pharmacie.repository.VenteRepository;
-import org.springframework.stereotype.Service;
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Optional;
 
 @Service
+@Transactional
 public class FactureService {
     
     private final FactureRepository factureRepository;
@@ -70,9 +73,9 @@ public class FactureService {
         Paragraph pharmacyInfo = new Paragraph()
                 .add("PHARMACIE HORIZON\n")
                 .setFont(boldFont)
-                .add("Rue Mohamed V, Quartier Centre\n")
-                .add("Tél: +212 5XX XXX XXX\n")
-                .add("Email: contact@pharmacie-horizon.ma\n")
+                .add("Bd Bir Anzarane, Quartier Maarif\n")
+                .add("Tél: +212 610 56 77 06\n")
+                .add("Email: pharmahorizon@gmail.com\n")
                 .setFont(regularFont)
                 .setFontSize(10)
                 .setMarginBottom(20);
@@ -172,9 +175,11 @@ public class FactureService {
     }
 
     // Méthode pour générer et sauvegarder une facture en DB
-    public Facture generateAndSaveFacture(Long venteId) throws IOException {
+    @Transactional
+    public Facture generateAndSaveFacture(Long venteId) {
         Optional<Vente> venteOpt = venteRepository.findById(venteId);
         if (!venteOpt.isPresent()) {
+            System.err.println("Erreur: Vente non trouvée avec l'ID: " + venteId);
             throw new RuntimeException("Vente not found with id: " + venteId);
         }
 
@@ -183,25 +188,39 @@ public class FactureService {
         // Vérifier si une facture existe déjà
         Optional<Facture> existingFacture = factureRepository.findByVente(vente);
         if (existingFacture.isPresent()) {
+            System.out.println("Facture existante trouvée pour vente: " + venteId);
             return existingFacture.get();
         }
 
         try {
+            System.out.println("Génération PDF pour vente: " + venteId);
+            
             // Créer le DTO pour la génération PDF
             VenteDTO venteDTO = convertToDTO(vente);
+            System.out.println("DTO créé avec " + (venteDTO.getLignes() != null ? venteDTO.getLignes().size() : 0) + " lignes");
 
             // Générer le PDF
             byte[] pdfContent = generateFacturePDF(venteDTO);
+            System.out.println("PDF généré: " + pdfContent.length + " bytes");
 
             // Créer et sauvegarder la facture
             String numeroFacture = "FAC-" + vente.getId();
             Facture facture = new Facture(vente, pdfContent, numeroFacture);
             
-            return factureRepository.save(facture);
+            Facture factureSauvegardee = factureRepository.save(facture);
+            System.out.println("Facture sauvegardée en BD avec ID: " + factureSauvegardee.getId());
+            
+            return factureSauvegardee;
+        } catch (IOException ioException) {
+            System.err.println("Erreur IO lors de la génération de la facture: " + ioException.getMessage());
+            ioException.printStackTrace();
+            // Relancer comme RuntimeException pour éviter la déclaration throws
+            throw new RuntimeException("Erreur IO lors de la génération de la facture: " + ioException.getMessage(), ioException);
         } catch (Exception e) {
-            System.err.println("Erreur lors de la génération de la facture: " + e.getMessage());
+            System.err.println("Erreur générale lors de la génération de la facture: " + e.getMessage());
+            System.err.println("Classe de l'exception: " + e.getClass().getName());
             e.printStackTrace();
-            throw e;
+            throw new RuntimeException("Erreur lors de la génération de la facture: " + e.getMessage(), e);
         }
     }
 
@@ -239,6 +258,10 @@ public class FactureService {
                     ligneDTO.setQuantite(ligne.getQuantite());
                     ligneDTO.setPrixUnitaire(ligne.getPrixUnitaire());
                     ligneDTO.setMedicamentId(ligne.getMedicament().getId());
+                    
+                    if (dto.getLignes() == null) {
+                        dto.setLignes(new java.util.ArrayList<>());
+                    }
                     dto.getLignes().add(ligneDTO);
                 }
             }
