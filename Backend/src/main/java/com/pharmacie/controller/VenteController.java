@@ -21,8 +21,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.pharmacie.dto.VenteDTO;
-import com.pharmacie.service.VenteService;
 import com.pharmacie.service.FactureService;
+import com.pharmacie.service.VenteService;
 
 @RestController
 @RequestMapping("/api/ventes")
@@ -73,7 +73,12 @@ public class VenteController {
     public ResponseEntity<List<VenteDTO>> obtenirVentesByDateRange(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime debut,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fin) {
-        return ResponseEntity.ok(venteService.obtenirVentesByDateRange(debut, fin));
+        System.out.println("🌐 VenteController.obtenirVentesByDateRange - Reçu:");
+        System.out.println("  Début: " + debut);
+        System.out.println("  Fin: " + fin);
+        List<VenteDTO> result = venteService.obtenirVentesByDateRange(debut, fin);
+        System.out.println("  Retour: " + result.size() + " ventes");
+        return ResponseEntity.ok(result);
     }
 
     @GetMapping("/by-jour")

@@ -196,10 +196,22 @@ class VenteService {
 
   async getVentesByDateRange(debut: Date, fin: Date): Promise<Vente[]> {
     try {
-      const debutStr = debut.toISOString();
-      const finStr = fin.toISOString();
+      // Convertir les dates en ISO en compensant le décalage timezone
+      // Cela garantit que "minuit local" devient "minuit dans la requête"
+      const timezoneOffset = debut.getTimezoneOffset() * 60000;
+      const debutISO = new Date(debut.getTime() - timezoneOffset).toISOString();
+      const finISO = new Date(fin.getTime() - timezoneOffset).toISOString();
+      
+      console.log("🔍 getVentesByDateRange - Requête backend:", {
+        debut: debut.toLocaleString(),
+        fin: fin.toLocaleString(),
+        debutISO: debutISO,
+        finISO: finISO,
+        url: `${API_BASE_URL}/ventes/by-date-range?debut=${debutISO}&fin=${finISO}`
+      });
+
       const response = await fetch(
-        `${API_BASE_URL}/ventes/by-date-range?debut=${debutStr}&fin=${finStr}`,
+        `${API_BASE_URL}/ventes/by-date-range?debut=${debutISO}&fin=${finISO}`,
         {
           method: "GET",
           headers: this.getHeaders(),
@@ -207,7 +219,9 @@ class VenteService {
       );
 
       if (!response.ok) throw new Error("Failed to fetch ventes");
-      return response.json();
+      const data: VenteBackendDTO[] = await response.json();
+      console.log("🔍 getVentesByDateRange - Réponse:", data.length, "ventes reçues");
+      return this.transformVentes(data);
     } catch (error) {
       console.error("Error fetching ventes:", error);
       return [];
@@ -419,12 +433,33 @@ class VenteService {
   }
 
   async getVentesToday(): Promise<Vente[]> {
+    // Créer une plage pour capturer UNIQUEMENT les ventes du jour
+    // En tenant compte du décalage timezone
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    // Début: minuit du jour courant (heure locale)
+    const debut = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0, 0);
+    
+    // Fin: 23h59:59 du jour courant
+    const fin = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59, 999);
 
-    return this.getVentesByDateRange(today, tomorrow);
+    // Convertir en ISO en compensant le décalage timezone
+    const timezoneOffset = debut.getTimezoneOffset() * 60000; // en millisecondes
+    const debutISO = new Date(debut.getTime() - timezoneOffset).toISOString();
+    const finISO = new Date(fin.getTime() - timezoneOffset).toISOString();
+
+    console.log("🕐 getVentesToday - Plage horaire pour aujourd'hui:", {
+      debut: debut.toLocaleString(),
+      fin: fin.toLocaleString(),
+      debutISO: debutISO,
+      finISO: finISO,
+      timezoneOffset: timezoneOffset / 60000 / 60 + " heures"
+    });
+
+    // Appeler avec les objets Date originaux (pas les strings ISO)
+    const result = await this.getVentesByDateRange(debut, fin);
+    console.log("🕐 getVentesToday - Résultat:", result.length, "ventes trouvées pour aujourd'hui");
+    return result;
   }
 
   async getVentesYesterday(): Promise<Vente[]> {

@@ -34,6 +34,8 @@ export function Sales({ userId }: SalesProps) {
   const [errorSnackbarOpen, setErrorSnackbarOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [confirmSaleDialogOpen, setConfirmSaleDialogOpen] = useState(false);
+  const [insufficientStockDialogOpen, setInsufficientStockDialogOpen] = useState(false);
+  const [insufficientStockItems, setInsufficientStockItems] = useState<Array<{ nom: string; stock: number; demande: number }>>([]);
 
   // Gestion ventes historique
   const [ventes, setVentes] = useState<Vente[]>([]);
@@ -199,6 +201,25 @@ export function Sales({ userId }: SalesProps) {
       return;
     }
 
+    // Vérifier que les stocks sont suffisants
+    const insufficientItems: Array<{ nom: string; stock: number; demande: number }> = [];
+    for (const cartItem of cart) {
+      const medicament = medicaments.find(m => m.id === cartItem.id);
+      if (medicament && medicament.stock < cartItem.quantite) {
+        insufficientItems.push({
+          nom: medicament.nom,
+          stock: medicament.stock,
+          demande: cartItem.quantite
+        });
+      }
+    }
+
+    if (insufficientItems.length > 0) {
+      setInsufficientStockItems(insufficientItems);
+      setInsufficientStockDialogOpen(true);
+      return;
+    }
+
     // Ouvrir le dialog de confirmation
     setConfirmSaleDialogOpen(true);
   };
@@ -266,6 +287,10 @@ export function Sales({ userId }: SalesProps) {
       
       // Recharger les médicaments pour mettre à jour les stocks
       await loadMedicaments();
+
+      // Émettre un événement custom pour notifier le Dashboard
+      console.log("🚀 Sales: Émission de l'événement saleCreated");
+      window.dispatchEvent(new Event("saleCreated"));
 
       // Afficher dialog de succès
       setSuccessDialogOpen(true);
@@ -736,6 +761,64 @@ export function Sales({ userId }: SalesProps) {
               className="w-full bg-teal-500 hover:bg-teal-600 text-white font-semibold h-11"
             >
               OK - Continuer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog Stock Insuffisant */}
+      <Dialog open={insufficientStockDialogOpen} onOpenChange={setInsufficientStockDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4v2m0 4v2M7.08 6.47A9 9 0 1121 12a9 9 0 01-13.92-5.53" />
+              </svg>
+              Stock insuffisant
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <p className="text-sm text-gray-600">
+              {insufficientStockItems.length === 1
+                ? "Le produit suivant n'a pas assez de stock:"
+                : "Les produits suivants n'ont pas assez de stock:"}
+            </p>
+
+            <div className="space-y-3">
+              {insufficientStockItems.map((item, index) => (
+                <div key={index} className="bg-red-50 border border-red-200 rounded-lg p-3">
+                  <p className="font-semibold text-gray-800 mb-2">{item.nom}</p>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-gray-600">Stock disponible:</span>
+                      <p className="font-bold text-red-600 text-lg">{item.stock}</p>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Quantité demandée:</span>
+                      <p className="font-bold text-orange-600 text-lg">{item.demande}</p>
+                    </div>
+                  </div>
+                  <div className="mt-2 pt-2 border-t border-red-200">
+                    <span className="text-xs text-red-700 font-semibold">
+                      Manquent: {item.demande - item.stock} unités
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <p className="text-xs text-gray-600 italic bg-yellow-50 border border-yellow-200 rounded p-2">
+              💡 Veuillez réduire les quantités ou retirer les articles avant de confirmer la vente.
+            </p>
+          </div>
+
+          <DialogFooter>
+            <Button
+              onClick={() => setInsufficientStockDialogOpen(false)}
+              className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold h-10"
+            >
+              OK - Modifier le panier
             </Button>
           </DialogFooter>
         </DialogContent>

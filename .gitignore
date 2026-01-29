@@ -1,6 +1,5 @@
 # IDE
 .idea/
-.vscode/
 *.swp
 *.swo
 *~
@@ -21,8 +20,6 @@ dependency-reduced-pom.xml
 build/
 
 # Environment variables
-.env
-.env.local
 .env.*.local
 
 # Logs
@@ -53,3 +50,4 @@ Thumbs.db
 *.zip
 *.tar.gz
 *.rar
+config.bat
