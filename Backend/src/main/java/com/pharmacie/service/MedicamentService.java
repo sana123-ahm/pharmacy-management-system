@@ -3,6 +3,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import com.pharmacie.dto.MedicamentListDTO;
@@ -15,6 +17,7 @@ import com.pharmacie.repository.MedicamentRepository;
 
 @Service
 public class MedicamentService {
+    private static final Logger logger = LoggerFactory.getLogger(MedicamentService.class);
     private final MedicamentRepository MR;
 
     public MedicamentService(MedicamentRepository MR) {
@@ -124,8 +127,7 @@ public class MedicamentService {
                 return true;
             }
         } catch (Exception e) {
-            System.err.println("Erreur lors de la suppression du médicament avec l'ID " + id + ": " + e.getMessage());
-            e.printStackTrace();
+            logger.error("Erreur lors de la suppression du médicament avec l'ID " + id, e);
         }
         return false;
     }

@@ -1,7 +1,5 @@
 package com.pharmacie.dto;
 
-import com.pharmacie.model.Utilisateur;
-
 public class AuthResponse {
     private String token;
     private String login;

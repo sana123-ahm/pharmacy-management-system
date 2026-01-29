@@ -6,15 +6,20 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.lang.NonNull;
 
 import com.pharmacie.model.Vente;
 
 public interface VenteRepository extends JpaRepository<Vente, Long> {
+    @Override
     @Query("SELECT DISTINCT v FROM Vente v LEFT JOIN FETCH v.lignes")
+    @NonNull
     List<Vente> findAll();
     
+    @Override
     @Query("SELECT DISTINCT v FROM Vente v LEFT JOIN FETCH v.lignes WHERE v.id = :id")
-    Optional<Vente> findById(@Param("id") Long id);
+    @NonNull
+    Optional<Vente> findById(@Param("id") @NonNull Long id);
     
     @Query("SELECT DISTINCT v FROM Vente v LEFT JOIN FETCH v.lignes WHERE v.patient.id = :patientId")
     List<Vente> findByPatient_Id(@Param("patientId") Long patientId);

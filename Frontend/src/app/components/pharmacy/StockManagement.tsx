@@ -31,8 +31,8 @@ interface HistoryItem {
 export function StockManagement() {
   const [medicaments, setMedicaments] = useState<MedicamentStock[]>([]);
   const [lowStockMedicaments, setLowStockMedicaments] = useState<MedicamentStock[]>([]);
-  const [movements, setMovements] = useState<StockMovement[]>([]);
-  const [allMovements, setAllMovements] = useState<any[]>([]); // Pour le total des mouvements
+  const [movements, setMovements] = useState<HistoryItem[]>([]);
+  const [allMovements, setAllMovements] = useState<HistoryItem[]>([]); // Pour le total des mouvements
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedMedicament, setSelectedMedicament] = useState<MedicamentStock | null>(null);
@@ -42,12 +42,14 @@ export function StockManagement() {
   const [showAllMovements, setShowAllMovements] = useState(false);
   const [formData, setFormData] = useState({
     quantite: "",
-    type: "RECEPTION" as const,
+    type: "RECEPTION" as "RECEPTION" | "AJUSTEMENT",
     motif: "",
   });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [filterType, setFilterType] = useState<"ALL" | "RECEPTION" | "AJUSTEMENT" | "VENTE">("ALL");
+  const [showConfirmMovement, setShowConfirmMovement] = useState(false);
+  const [pendingMovement, setPendingMovement] = useState<{ medicament: MedicamentStock; data: typeof formData } | null>(null);
 
   // Charger les données au démarrage
   useEffect(() => {
@@ -64,9 +66,16 @@ export function StockManagement() {
       const lowStock = data.filter((med) => med.stock <= 10);
       setLowStockMedicaments(lowStock);
       
-      // Charger TOUS les mouvements pour le total
+      // Charger TOUS les mouvements pour le total et les transformer en HistoryItem
       const allMovs = await stockService.getAllMovements();
-      setAllMovements(allMovs);
+      const historyItems: HistoryItem[] = allMovs.map((mov) => ({
+        id: `movement-${mov.id}`,
+        type: mov.type as "RECEPTION" | "AJUSTEMENT",
+        quantite: mov.quantite,
+        motif: mov.motif,
+        createdAt: mov.createdAt,
+      }));
+      setAllMovements(historyItems);
     } catch (err) {
       setError("Erreur lors du chargement des médicaments");
     } finally {
@@ -121,26 +130,36 @@ export function StockManagement() {
     }
   };
 
-  const handleAddMovement = async () => {
+  const handleAddMovement = () => {
     if (!selectedMedicament || !formData.quantite) {
       setError("Veuillez remplir tous les champs");
       return;
     }
+
+    // Afficher la confirmation
+    setPendingMovement({ medicament: selectedMedicament, data: formData });
+    setShowConfirmMovement(true);
+  };
+
+  const handleConfirmMovement = async () => {
+    if (!pendingMovement) return;
 
     try {
       setError("");
       setSuccess("");
       
       await stockService.createMovement(
-        selectedMedicament.id,
-        parseInt(formData.quantite),
-        formData.type,
-        formData.motif
+        pendingMovement.medicament.id,
+        parseInt(pendingMovement.data.quantite),
+        pendingMovement.data.type,
+        pendingMovement.data.motif
       );
 
       setSuccess(`Mouvement de stock enregistré avec succès!`);
       setFormData({ quantite: "", type: "RECEPTION", motif: "" });
       setShowAddMovement(false);
+      setShowConfirmMovement(false);
+      setPendingMovement(null);
       
       // Recharger les données
       await loadMedicaments();
@@ -153,7 +172,14 @@ export function StockManagement() {
       setTimeout(() => setSuccess(""), 3000);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erreur lors de l'ajout du mouvement");
+      setShowConfirmMovement(false);
+      setPendingMovement(null);
     }
+  };
+
+  const handleCancelMovement = () => {
+    setShowConfirmMovement(false);
+    setPendingMovement(null);
   };
 
   const getStockColor = (stock: number) => {
@@ -431,11 +457,11 @@ export function StockManagement() {
             </DialogHeader>
 
             <div className="space-y-4">
-              {!selectedMedicament && (
+              {!selectedMedicament ? (
                 <div>
                   <Label>Sélectionner un Médicament *</Label>
                   <select
-                    value={selectedMedicament?.id || ""}
+                    value=""
                     onChange={(e) => {
                       const med = medicaments.find((m) => m.id === parseInt(e.target.value));
                       setSelectedMedicament(med || null);
@@ -450,9 +476,7 @@ export function StockManagement() {
                     ))}
                   </select>
                 </div>
-              )}
-
-              {selectedMedicament && (
+              ) : (
                 <>
                   <div className="bg-blue-50 p-3 rounded border border-blue-200">
                     <p className="text-sm text-gray-600">Médicament sélectionné</p>
@@ -626,6 +650,71 @@ export function StockManagement() {
                 </button>
               </div>
             )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Dialog Confirmation Mouvement */}
+        <Dialog open={showConfirmMovement} onOpenChange={setShowConfirmMovement}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <svg className="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Confirmer le mouvement
+              </DialogTitle>
+            </DialogHeader>
+
+            <div className="space-y-4">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p className="font-semibold text-gray-800 mb-3">Détails du mouvement:</p>
+                <div className="space-y-2 text-sm">
+                  <div>
+                    <span className="text-gray-600">Médicament:</span>
+                    <p className="font-semibold text-gray-900">{pendingMovement?.medicament.nom}</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Type:</span>
+                    <p className="font-semibold text-gray-900">
+                      {pendingMovement?.data.type === "RECEPTION" ? "📥 Réception (Ajouter du stock)" : "🔧 Ajustement (Corriger la quantité)"}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Quantité:</span>
+                    <p className="font-semibold text-lg text-blue-600">{pendingMovement?.data.quantite} unités</p>
+                  </div>
+                  {pendingMovement?.data.motif && (
+                    <div>
+                      <span className="text-gray-600">Motif:</span>
+                      <p className="font-semibold text-gray-900">{pendingMovement.data.motif}</p>
+                    </div>
+                  )}
+                  <div>
+                    <span className="text-gray-600">Stock actuel:</span>
+                    <p className="font-semibold text-gray-900">{pendingMovement?.medicament.stock} unités</p>
+                  </div>
+                </div>
+              </div>
+
+              <p className="text-sm text-gray-700 italic">
+                ⚠️ Êtes-vous sûr de vouloir effectuer ce mouvement? Cette action est enregistrée dans l'historique.
+              </p>
+            </div>
+
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={handleCancelMovement}
+              >
+                Annuler
+              </Button>
+              <Button
+                onClick={handleConfirmMovement}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                ✓ Confirmer le Mouvement
+              </Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>

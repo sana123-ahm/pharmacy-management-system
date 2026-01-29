@@ -1,15 +1,27 @@
 package com.pharmacie.controller;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import com.pharmacie.dto.*;
-import com.pharmacie.model.Medicament;
-import com.pharmacie.model.Fournisseur;
-import com.pharmacie.service.MedicamentService;
-import com.pharmacie.repository.MedicamentRepository;
 import java.util.List;
 import java.util.Optional;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.pharmacie.dto.MedicamentListDTO;
+import com.pharmacie.dto.MedicamentRequestDTO;
+import com.pharmacie.dto.MedicamentResponseDTO;
+import com.pharmacie.dto.MedicamentStockUpdateDTO;
+import com.pharmacie.model.Fournisseur;
+import com.pharmacie.model.Medicament;
+import com.pharmacie.service.MedicamentService;
 
 @RestController                    
 @RequestMapping("/api/medicaments")
