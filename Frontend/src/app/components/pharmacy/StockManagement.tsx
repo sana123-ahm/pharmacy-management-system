@@ -349,7 +349,7 @@ export function StockManagement() {
                         {med.nom}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600">
-                        ${med.prix.toFixed(2)}
+                        {med.prix.toFixed(2)} DH
                       </td>
                       <td className="px-6 py-4 text-sm">
                         <span className={`font-bold ${getStockColor(med.stock)}`}>

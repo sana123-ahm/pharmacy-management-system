@@ -33,6 +33,7 @@ export function Sales({ userId }: SalesProps) {
   const [successDialogOpen, setSuccessDialogOpen] = useState(false);
   const [errorSnackbarOpen, setErrorSnackbarOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [confirmSaleDialogOpen, setConfirmSaleDialogOpen] = useState(false);
 
   // Gestion ventes historique
   const [ventes, setVentes] = useState<Vente[]>([]);
@@ -77,6 +78,8 @@ export function Sales({ userId }: SalesProps) {
       let data: Vente[] = [];
       if (filterPeriod === "today") {
         data = await venteService.getVentesToday();
+      } else if (filterPeriod === "yesterday") {
+        data = await venteService.getVentesYesterday();
       } else {
         data = await venteService.getAllVentes();
       }
@@ -196,6 +199,12 @@ export function Sales({ userId }: SalesProps) {
       return;
     }
 
+    // Ouvrir le dialog de confirmation
+    setConfirmSaleDialogOpen(true);
+  };
+
+  const handleConfirmSale = async () => {
+    setConfirmSaleDialogOpen(false);
     setIsSaving(true);
     try {
       // Créer la vente
@@ -272,6 +281,10 @@ export function Sales({ userId }: SalesProps) {
     }
   };
 
+  const handleCancelSale = () => {
+    setConfirmSaleDialogOpen(false);
+  };
+
   const handleCloseErrorSnackbar = (event?: React.SyntheticEvent | Event, reason?: string) => {
     if (reason === "clickaway") {
       return;
@@ -343,6 +356,7 @@ export function Sales({ userId }: SalesProps) {
           >
             <option value="all">Toutes</option>
             <option value="today">Aujourd'hui</option>
+            <option value="yesterday">Hier</option>
           </select>
         </div>
       </div>
@@ -613,6 +627,88 @@ export function Sales({ userId }: SalesProps) {
               )}
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog de confirmation de la vente */}
+      <Dialog open={confirmSaleDialogOpen} onOpenChange={setConfirmSaleDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-center text-lg font-bold text-blue-600">
+              ⚠️ Confirmation de vente
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-gray-700 font-medium mb-4">
+              Confirmez-vous cette vente ?
+            </p>
+
+            {/* Détails des articles du panier */}
+            <div className="bg-gray-50 p-4 rounded-lg mb-6">
+              <h3 className="font-semibold text-gray-800 mb-3">Détails du panier:</h3>
+              <div className="space-y-2 max-h-64 overflow-y-auto">
+                {cart.map((item, index) => (
+                  <div key={index} className="flex justify-between items-center pb-2 border-b border-gray-200 last:border-b-0">
+                    <div className="flex-1">
+                      <p className="font-medium text-gray-800">{item.nom}</p>
+                      <p className="text-xs text-gray-500">
+                        {item.prix.toFixed(2)} DH × {item.quantite} = <span className="font-semibold text-gray-700">{(item.prix * item.quantite).toFixed(2)} DH</span>
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <span className="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm font-semibold">
+                        Qté: {item.quantite}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Résumé */}
+            <div className="bg-white p-4 border-2 border-teal-200 rounded-lg mb-4">
+              <div className="flex justify-between mb-2">
+                <span className="text-gray-600">Nombre d'articles:</span>
+                <span className="font-semibold">{cart.length}</span>
+              </div>
+              <div className="flex justify-between mb-2">
+                <span className="text-gray-600">Quantité totale:</span>
+                <span className="font-semibold">{cart.reduce((sum, item) => sum + item.quantite, 0)}</span>
+              </div>
+              <div className="flex justify-between pt-2 border-t-2 border-teal-200">
+                <span className="text-gray-800 font-bold">Montant total:</span>
+                <span className="font-bold text-teal-600 text-lg">{cartTotal.toFixed(2)} DH</span>
+              </div>
+            </div>
+
+            <p className="text-gray-500 text-xs text-center mb-4">
+              Cette action ne peut pas être annulée immédiatement après confirmation.
+            </p>
+          </div>
+          <DialogFooter className="flex gap-3">
+            <Button
+              onClick={handleCancelSale}
+              variant="outline"
+              className="flex-1"
+              disabled={isSaving}
+            >
+              Annuler
+            </Button>
+            <Button
+              onClick={handleConfirmSale}
+              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold"
+              disabled={isSaving}
+            >
+              {isSaving ? (
+                <>
+                  <Loader className="h-4 w-4 animate-spin mr-2" />
+                  Traitement...
+                </>
+              ) : (
+                "Confirmer la vente"
+              )}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 

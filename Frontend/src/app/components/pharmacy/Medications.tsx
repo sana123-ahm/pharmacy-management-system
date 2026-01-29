@@ -21,6 +21,10 @@ export function Medications() {
   const [error, setError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [showAllMeds, setShowAllMeds] = useState(false);
+  const [successDialogOpen, setSuccessDialogOpen] = useState(false);
+  const [deleteSuccessMessage, setDeleteSuccessMessage] = useState("");
+  const [confirmDeleteDialogOpen, setConfirmDeleteDialogOpen] = useState(false);
+  const [medicamentToDelete, setMedicamentToDelete] = useState<Medicament | null>(null);
 
   const [formData, setFormData] = useState<MedicamentRequestDTO>({
     nom: "",
@@ -132,18 +136,39 @@ export function Medications() {
   };
 
   const handleDelete = async (id: number) => {
-    if (confirm("Êtes-vous sûr de vouloir supprimer ce médicament ?")) {
-      try {
-        const success = await medicamentService.deleteMedicament(id);
-        if (success) {
-          setMedications(medications.filter((med) => med.id !== id));
-        } else {
-          setError("Erreur lors de la suppression du médicament");
-        }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Erreur lors de la suppression");
-      }
+    const med = medications.find((m) => m.id === id);
+    if (med) {
+      setMedicamentToDelete(med);
+      setConfirmDeleteDialogOpen(true);
     }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!medicamentToDelete) return;
+
+    try {
+      const success = await medicamentService.deleteMedicament(medicamentToDelete.id);
+      if (success) {
+        setMedications(medications.filter((med) => med.id !== medicamentToDelete.id));
+        setDeleteSuccessMessage("Médicament supprimé avec succès!");
+        setSuccessDialogOpen(true);
+        setConfirmDeleteDialogOpen(false);
+        setMedicamentToDelete(null);
+      } else {
+        setError("Erreur lors de la suppression du médicament");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erreur lors de la suppression");
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setConfirmDeleteDialogOpen(false);
+    setMedicamentToDelete(null);
+  };
+
+  const handleCloseSuccessDialog = () => {
+    setSuccessDialogOpen(false);
   };
 
   if (loading) {
@@ -403,6 +428,77 @@ export function Medications() {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog de confirmation de suppression */}
+      <Dialog open={confirmDeleteDialogOpen} onOpenChange={setConfirmDeleteDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-center text-lg font-bold text-red-600">
+              ⚠️ Confirmation de suppression
+            </DialogTitle>
+          </DialogHeader>
+          <div className="text-center py-6">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-100 mb-4">
+              <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4v2m0 0v2m0-6v-2m0 0v-2m0 6v2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <p className="text-gray-700 font-medium mb-2">
+              Êtes-vous sûr de vouloir supprimer ce médicament ?
+            </p>
+            <p className="text-gray-600 text-sm mb-6">
+              <strong>{medicamentToDelete?.nom}</strong>
+            </p>
+            <p className="text-gray-500 text-xs mb-4">
+              Cette action ne peut pas être annulée.
+            </p>
+          </div>
+          <DialogFooter className="flex gap-3">
+            <Button
+              onClick={handleCancelDelete}
+              variant="outline"
+              className="flex-1"
+            >
+              Annuler
+            </Button>
+            <Button
+              onClick={handleConfirmDelete}
+              className="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold"
+            >
+              Supprimer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog de succès pour la suppression */}
+      <Dialog open={successDialogOpen} onOpenChange={setSuccessDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-center text-xl font-bold text-green-600">
+              ✓ Médicament supprimé!
+            </DialogTitle>
+          </DialogHeader>
+          <div className="text-center py-6">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 mb-4">
+              <svg className="w-8 h-8 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <p className="text-gray-700 font-medium mb-6">
+              {deleteSuccessMessage}
+            </p>
+          </div>
+          <DialogFooter>
+            <Button
+              onClick={handleCloseSuccessDialog}
+              className="w-full bg-teal-500 hover:bg-teal-600 text-white font-semibold h-11"
+            >
+              OK - Continuer
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

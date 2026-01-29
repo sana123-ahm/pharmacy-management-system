@@ -427,6 +427,16 @@ class VenteService {
     return this.getVentesByDateRange(today, tomorrow);
   }
 
+  async getVentesYesterday(): Promise<Vente[]> {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    yesterday.setHours(0, 0, 0, 0);
+    const today = new Date(yesterday);
+    today.setDate(today.getDate() + 1);
+
+    return this.getVentesByDateRange(yesterday, today);
+  }
+
   async getTotalRevenue(): Promise<number> {
     const ventes = await this.getAllVentes();
     return ventes.reduce((sum, vente) => sum + vente.montantTotal, 0);

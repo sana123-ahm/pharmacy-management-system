@@ -4,6 +4,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
+
 import com.pharmacie.dto.MedicamentListDTO;
 import com.pharmacie.dto.MedicamentRequestDTO;
 import com.pharmacie.dto.MedicamentResponseDTO;
@@ -117,9 +118,14 @@ public class MedicamentService {
         if (id == null) {
             return false;
         }
-        if (MR.existsById(id)) {
-            MR.deleteById(id);
-            return true;
+        try {
+            if (MR.existsById(id)) {
+                MR.deleteById(id);
+                return true;
+            }
+        } catch (Exception e) {
+            System.err.println("Erreur lors de la suppression du médicament avec l'ID " + id + ": " + e.getMessage());
+            e.printStackTrace();
         }
         return false;
     }
