@@ -42,40 +42,62 @@ export function Dashboard({ userId }: DashboardProps) {
   const [error, setError] = useState("");
   const [showAllVentes, setShowAllVentes] = useState(false);
   const [showAllAlerts, setShowAllAlerts] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0); // Pour forcer le rechargement
+
+  const loadData = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      console.log("📊 Dashboard: Chargement des données...");
+      
+      // Récupérer les médicaments
+      const medsData = await medicamentService.getAllMedicaments();
+      setMedicaments(medsData);
+
+      // Récupérer les ventes du jour
+      const ventesData = await venteService.getVentesToday();
+      console.log("📊 Dashboard: Ventes d'aujourd'hui reçues:", ventesData.length, ventesData);
+      setVentes(ventesData);
+
+      // Récupérer les médicaments en stock faible
+      const lowStock = await medicamentService.getLowStockMedicaments();
+      setLowStockMedicaments(lowStock);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erreur lors du chargement des données");
+      console.error("❌ Erreur Dashboard:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const loadData = async () => {
-      setLoading(true);
-      setError("");
-      try {
-        // Récupérer les médicaments
-        const medsData = await medicamentService.getAllMedicaments();
-        setMedicaments(medsData);
-
-        // Récupérer les ventes du jour
-        const ventesData = await venteService.getVentesToday();
-        setVentes(ventesData);
-
-        // Récupérer les médicaments en stock faible
-        const lowStock = await medicamentService.getLowStockMedicaments();
-        setLowStockMedicaments(lowStock);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Erreur lors du chargement des données");
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    // Charger les données immédiatement
     loadData();
 
-    // Rafraîchir les données toutes les 30 secondes
-    const interval = setInterval(loadData, 30000);
+    // Rafraîchir les données toutes les 60 secondes (1 minute)
+    const interval = setInterval(() => {
+      console.log("⏱️ Dashboard: Rafraîchissement automatique après 1 minute");
+      loadData();
+    }, 60000);
 
-    // Nettoyer l'intervalle quand le composant est démonté
-    return () => clearInterval(interval);
-  }, []);
+    // Écouter l'événement custom quand une vente est enregistrée
+    const handleSaleCreated = () => {
+      console.log("🔔 Dashboard: Événement saleCreated reçu, rafraîchissement immédiat");
+      loadData();
+    };
+
+    window.addEventListener("saleCreated", handleSaleCreated);
+
+    // Nettoyer l'intervalle et l'écouteur quand le composant est démonté
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("saleCreated", handleSaleCreated);
+    };
+  }, [refreshTrigger]);
+
+  // Forcer le rechargement des données
+  const handleRefresh = () => {
+    setRefreshTrigger(prev => prev + 1);
+  };
 
   const stats = [
     {
@@ -119,9 +141,19 @@ export function Dashboard({ userId }: DashboardProps) {
   return (
     <div className="space-y-6">
       {/* En-tête */}
-      <div>
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">Tableau de bord</h1>
-        <p className="text-gray-600">Vue d'ensemble de votre pharmacie</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">Tableau de bord</h1>
+          <p className="text-gray-600">Vue d'ensemble de votre pharmacie</p>
+        </div>
+        <button
+          onClick={handleRefresh}
+          disabled={loading}
+          className="px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-lg font-semibold transition-all disabled:opacity-50"
+          title="Rafraîchir les données"
+        >
+          {loading ? "⏳" : "🔄"} Rafraîchir
+        </button>
       </div>
 
       {/* Afficher les erreurs */}

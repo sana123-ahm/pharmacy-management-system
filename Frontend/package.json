@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "vite build",
-    "dev": "vite"
+    "dev": "node api.js && vite"
   },
   "dependencies": {
     "@emotion/react": "11.14.0",

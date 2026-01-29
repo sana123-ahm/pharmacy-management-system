@@ -181,8 +181,18 @@ public class VenteServiceImpl implements VenteService {
 
     @Override
     public List<VenteDTO> obtenirVentesByDateRange(LocalDateTime debut, LocalDateTime fin) {
-        return venteRepository.findByDateRange(debut, fin)
-                .stream()
+        System.out.println("🔍 VenteService.obtenirVentesByDateRange - Requête reçue:");
+        System.out.println("  Début: " + debut);
+        System.out.println("  Fin: " + fin);
+        
+        List<Vente> ventes = venteRepository.findByDateRange(debut, fin);
+        System.out.println("  Résultat: " + ventes.size() + " ventes trouvées");
+        
+        for (Vente v : ventes) {
+            System.out.println("    - Vente ID " + v.getId() + ": " + v.getDate() + " - " + v.getMontantTotal() + " DH");
+        }
+        
+        return ventes.stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
