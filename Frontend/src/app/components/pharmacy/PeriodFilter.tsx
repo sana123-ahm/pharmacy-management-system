@@ -84,175 +84,172 @@ export function PeriodFilter({ onFilterChange, loading = false }: PeriodFilterPr
   };
 
   return (
-    <div className="bg-gradient-to-br from-teal-50 to-cyan-50 rounded-xl border border-teal-200 p-6 shadow-sm">
+    <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
       <div className="flex items-center gap-3 mb-6">
         <div className="p-3 bg-teal-500 rounded-lg">
           <Calendar className="h-6 w-6 text-white" />
         </div>
         <div>
-          <h3 className="font-bold text-teal-900 text-lg">Filtrer par Période</h3>
-          <p className="text-teal-700 text-sm">Sélectionnez la période pour afficher les ventes</p>
+          <h3 className="font-bold text-gray-900 text-lg">Filtrer par Période</h3>
+          <p className="text-gray-600 text-sm">Sélectionnez le type et la période de filtrage</p>
         </div>
       </div>
 
-      <div className="space-y-4">
-        {/* Filter Type Selection */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-          <button
-            onClick={() => setFilterType("jour")}
-            className={`px-4 py-2 rounded-lg font-medium transition-all ${
-              filterType === "jour"
-                ? "bg-teal-500 text-white shadow-md"
-                : "bg-white text-teal-700 border border-teal-200 hover:bg-teal-50"
-            }`}
-          >
-            Par Jour
-          </button>
-          <button
-            onClick={() => setFilterType("semaine")}
-            className={`px-4 py-2 rounded-lg font-medium transition-all ${
-              filterType === "semaine"
-                ? "bg-teal-500 text-white shadow-md"
-                : "bg-white text-teal-700 border border-teal-200 hover:bg-teal-50"
-            }`}
-          >
-            Par Semaine
-          </button>
-          <button
-            onClick={() => setFilterType("mois")}
-            className={`px-4 py-2 rounded-lg font-medium transition-all ${
-              filterType === "mois"
-                ? "bg-teal-500 text-white shadow-md"
-                : "bg-white text-teal-700 border border-teal-200 hover:bg-teal-50"
-            }`}
-          >
-            Par Mois
-          </button>
-          <button
-            onClick={() => setFilterType("trimestre")}
-            className={`px-4 py-2 rounded-lg font-medium transition-all ${
-              filterType === "trimestre"
-                ? "bg-teal-500 text-white shadow-md"
-                : "bg-white text-teal-700 border border-teal-200 hover:bg-teal-50"
-            }`}
-          >
-            Par Trimestre
-          </button>
-          <button
-            onClick={() => setFilterType("semestre")}
-            className={`px-4 py-2 rounded-lg font-medium transition-all ${
-              filterType === "semestre"
-                ? "bg-teal-500 text-white shadow-md"
-                : "bg-white text-teal-700 border border-teal-200 hover:bg-teal-50"
-            }`}
-          >
-            Par Semestre
-          </button>
-          <button
-            onClick={() => setFilterType("annee")}
-            className={`px-4 py-2 rounded-lg font-medium transition-all ${
-              filterType === "annee"
-                ? "bg-teal-500 text-white shadow-md"
-                : "bg-white text-teal-700 border border-teal-200 hover:bg-teal-50"
-            }`}
-          >
-            Par Année
-          </button>
+      <div className="space-y-5">
+        {/* Type de Période - Une seule ligne */}
+        <div>
+          <label className="text-sm font-semibold text-gray-700 mb-3 block">Type de Période</label>
+          <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+            {[
+              { value: "jour", label: "Jour" },
+              { value: "semaine", label: "Semaine" },
+              { value: "mois", label: "Mois" },
+              { value: "trimestre", label: "Trimestre" },
+              { value: "semestre", label: "Semestre" },
+              { value: "annee", label: "Année" },
+            ].map((option) => (
+              <button
+                key={option.value}
+                onClick={() => setFilterType(option.value as any)}
+                className={`px-3 py-2 rounded-lg font-medium transition-all text-sm ${
+                  filterType === option.value
+                    ? "bg-teal-500 text-white shadow-md"
+                    : "bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200"
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* Dynamic Selectors */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Année */}
-          {filterType !== "jour" && (
-            <div>
-              <label className="text-sm font-semibold text-teal-900 mb-2 block">Année</label>
-              <select
-                value={selectedYear}
-                onChange={(e) => setSelectedYear(Number(e.target.value))}
-                className="w-full px-3 py-2 border border-teal-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-              >
-                {years.map((year) => (
-                  <option key={year} value={year}>
-                    {year}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
+        {/* Options de Filtrage - Organisées selon le type */}
+        <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+          <div className="space-y-4">
+            {/* Année - Visible pour tous sauf "jour" */}
+            {filterType !== "jour" && (
+              <div>
+                <label className="text-sm font-semibold text-gray-700 mb-2 block">Année</label>
+                <select
+                  value={selectedYear}
+                  onChange={(e) => setSelectedYear(Number(e.target.value))}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white"
+                >
+                  {years.map((year) => (
+                    <option key={year} value={year}>
+                      {year}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
-          {/* Mois */}
-          {filterType === "mois" && (
-            <div>
-              <label className="text-sm font-semibold text-teal-900 mb-2 block">Mois</label>
-              <select
-                value={selectedMonth}
-                onChange={(e) => setSelectedMonth(Number(e.target.value))}
-                className="w-full px-3 py-2 border border-teal-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-              >
-                {months.map((month) => (
-                  <option key={month.value} value={month.value}>
-                    {month.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
+            {/* Mois - Visible pour "mois" */}
+            {filterType === "mois" && (
+              <div>
+                <label className="text-sm font-semibold text-gray-700 mb-2 block">Mois</label>
+                <select
+                  value={selectedMonth}
+                  onChange={(e) => setSelectedMonth(Number(e.target.value))}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white"
+                >
+                  {months.map((month) => (
+                    <option key={month.value} value={month.value}>
+                      {month.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
-          {/* Semaine */}
-          {filterType === "semaine" && (
-            <div>
-              <label className="text-sm font-semibold text-teal-900 mb-2 block">Semaine (1-52)</label>
-              <input
-                type="number"
-                min="1"
-                max="52"
-                value={selectedWeek}
-                onChange={(e) => setSelectedWeek(Number(e.target.value))}
-                className="w-full px-3 py-2 border border-teal-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-              />
-            </div>
-          )}
+            {/* Semaine - Visible pour "semaine" */}
+            {filterType === "semaine" && (
+              <div>
+                <label className="text-sm font-semibold text-gray-700 mb-2 block">Numéro de Semaine (1-52)</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="52"
+                  value={selectedWeek}
+                  onChange={(e) => setSelectedWeek(Math.min(52, Math.max(1, Number(e.target.value))))}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                />
+              </div>
+            )}
 
-          {/* Trimestre */}
-          {filterType === "trimestre" && (
-            <div>
-              <label className="text-sm font-semibold text-teal-900 mb-2 block">Trimestre (1-4)</label>
-              <select
-                value={selectedTrimestre}
-                onChange={(e) => setSelectedTrimestre(Number(e.target.value))}
-                className="w-full px-3 py-2 border border-teal-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-              >
-                <option value={1}>Q1 (Jan-Mar)</option>
-                <option value={2}>Q2 (Avr-Juin)</option>
-                <option value={3}>Q3 (Juil-Sep)</option>
-                <option value={4}>Q4 (Oct-Déc)</option>
-              </select>
-            </div>
-          )}
+            {/* Trimestre - Visible pour "trimestre" */}
+            {filterType === "trimestre" && (
+              <div>
+                <label className="text-sm font-semibold text-gray-700 mb-2 block">Trimestre</label>
+                <div className="grid grid-cols-4 gap-2">
+                  {[
+                    { value: 1, label: "Q1", desc: "Jan-Mar" },
+                    { value: 2, label: "Q2", desc: "Avr-Juin" },
+                    { value: 3, label: "Q3", desc: "Juil-Sep" },
+                    { value: 4, label: "Q4", desc: "Oct-Déc" },
+                  ].map((q) => (
+                    <button
+                      key={q.value}
+                      onClick={() => setSelectedTrimestre(q.value)}
+                      className={`p-2 rounded-lg font-medium transition-all text-sm ${
+                        selectedTrimestre === q.value
+                          ? "bg-teal-500 text-white"
+                          : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-100"
+                      }`}
+                    >
+                      <div>{q.label}</div>
+                      <div className="text-xs opacity-75">{q.desc}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
-          {/* Semestre */}
-          {filterType === "semestre" && (
-            <div>
-              <label className="text-sm font-semibold text-teal-900 mb-2 block">Semestre (1-2)</label>
-              <select
-                value={selectedSemestre}
-                onChange={(e) => setSelectedSemestre(Number(e.target.value))}
-                className="w-full px-3 py-2 border border-teal-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-              >
-                <option value={1}>S1 (Jan-Juin)</option>
-                <option value={2}>S2 (Juil-Déc)</option>
-              </select>
-            </div>
-          )}
+            {/* Semestre - Visible pour "semestre" */}
+            {filterType === "semestre" && (
+              <div>
+                <label className="text-sm font-semibold text-gray-700 mb-2 block">Semestre</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { value: 1, label: "S1", desc: "Jan-Juin" },
+                    { value: 2, label: "S2", desc: "Juil-Déc" },
+                  ].map((s) => (
+                    <button
+                      key={s.value}
+                      onClick={() => setSelectedSemestre(s.value)}
+                      className={`p-2 rounded-lg font-medium transition-all text-sm ${
+                        selectedSemestre === s.value
+                          ? "bg-teal-500 text-white"
+                          : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-100"
+                      }`}
+                    >
+                      <div>{s.label}</div>
+                      <div className="text-xs opacity-75">{s.desc}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Apply Button */}
+        {/* Bouton Appliquer */}
         <Button
           onClick={handleFilter}
           disabled={isLoading || loading}
-          className="w-full bg-teal-500 hover:bg-teal-600 text-white font-semibold py-2 rounded-lg transition-all"
+          className="w-full bg-teal-500 hover:bg-teal-600 text-white font-semibold py-3 rounded-lg transition-all shadow-md"
         >
-          {isLoading ? "Chargement..." : "Appliquer le Filtre"}
+          {isLoading || loading ? (
+            <>
+              <span className="mr-2">⏳</span>
+              Chargement...
+            </>
+          ) : (
+            <>
+              <span className="mr-2">🔍</span>
+              Appliquer le Filtre
+            </>
+          )}
         </Button>
       </div>
     </div>
